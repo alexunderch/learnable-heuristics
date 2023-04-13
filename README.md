@@ -1,1 +1,1 @@
-# learnable-heuristics
+# Learnable graph heuristics project
