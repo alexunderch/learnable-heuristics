@@ -1,0 +1,10 @@
+matplotlib
+torch_geometric
+torch_scatter -f https://data.pyg.org/whl/torch-2.0.0+cu117.html
+torch_sparse -f https://data.pyg.org/whl/torch-2.0.0+cu117.html
+torch_cluster -f https://data.pyg.org/whl/torch-2.0.0+cu117.html
+torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.0+cu117.html
+gdown 
+numpy
+wandb
+networkx
