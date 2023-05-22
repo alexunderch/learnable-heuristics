@@ -1,1 +1,3 @@
-# Learnable graph heuristics project
+# Project
+
+## Technical overview
