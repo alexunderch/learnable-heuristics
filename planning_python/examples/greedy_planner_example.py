@@ -69,9 +69,9 @@ print('Path Cost: ', path_cost)
 print('Number of Expansions: ', num_expansions)
 print('Time taken: ', plan_time)
 
-# e.initialize_plot(start, goal)
-# e.plot_path(path, 'solid', 'red', 3)
-# plt.show()
+e.initialize_plot(start, goal)
+e.plot_path(path, 'solid', 'red', 3)
+plt.show()
 
 
 

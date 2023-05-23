@@ -7,8 +7,8 @@ Date: 6 October, 2017
 
 """
 
-# import sys
-# sys.path.insert(0, "..")
+import sys
+sys.path.insert(0, "..")
 import matplotlib.pyplot as plt
 import time
 from planning_python.environment_interface.env_2d import Env2D
@@ -69,9 +69,9 @@ print('Path Cost: ', path_cost)
 print('Number of Expansions: ', num_expansions)
 print('Time taken: ', plan_time)
 
-# e.initialize_plot(start, goal, grid_res=lattice_params['resolution'], plot_grid=False)
-# e.plot_path(path, 'solid', 'red', 3)
-# plt.show()
+e.initialize_plot(start, goal, grid_res=lattice_params['resolution'], plot_grid=False)
+e.plot_path(path, 'solid', 'red', 3)
+plt.show()
 
 
 

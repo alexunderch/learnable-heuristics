@@ -5,6 +5,7 @@ already in the queue, but keep a duplicate. Lazy deletes help in taking random a
 import copy
 import heapq
 
+#REMOVED = '<removed-node>' #Placeholder for removed node
 REMOVED = (-1, -1) #Placeholder for removed node
 
 class PriorityQueue:
@@ -22,7 +23,20 @@ class PriorityQueue:
       self.remove_task(curr_node)
     entry = [priority1, priority2, curr_node]
     self.entry_finder[curr_node] = entry
+    #assert type(curr_node) == type(self.elements[0][2]), \
+    #        f"type curr_node: {type(curr_node)} and type current:\
+    #         {type(self.elements[0][2])}"
+    #print("debug", self.elements)       
     heapq.heappush(self.elements, entry)
+    #debug
+    #try:
+    #  heapq.heappush(self.elements, entry)
+    #except:
+    #  print("debug:", entry)
+    #  while len(self.elements) != 0:
+    #    print(heapq.heappop(self.elements))
+    #  assert 1==0
+
     self.curr_len += 1
   
   def remove_task(self, task):

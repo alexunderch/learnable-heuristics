@@ -66,7 +66,7 @@ class GreedyPlanner(SearchBasedPlanner):
             self.cost_so_far[neighbor] = new_g
             
             if neighbor == self.goal_node: 
-              print ("Found goal")
+              print "Found goal"
               found_goal = True
               break
             

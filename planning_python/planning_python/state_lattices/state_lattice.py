@@ -7,6 +7,7 @@
 
 import numpy as np
 from functools import reduce
+
 class StateLattice():
   def __init__(self, ndims, lower_limits = [], upper_limits = [], resolution = []):
     self.lower_limits = lower_limits
@@ -25,9 +26,9 @@ class StateLattice():
   def node_to_id(self, node):
     """Hash graph node to integer"""
     id = 0
-    for i in range(self.ndims):
+    for i in xrange(self.ndims):
       mul = 1
-      for j in range(self.ndims-i-1):
+      for j in xrange(self.ndims-i-1):
         mul = mul*self.num_cells[j]
       id = id + node[self.ndims-i-1]*mul
       id = int(id)
@@ -36,9 +37,9 @@ class StateLattice():
   def id_to_node(self, id):
     """Retrieve graph node corresponding to the hashed value"""
     node = np.array([0] * self.ndims)
-    for i in reversed(range(self.ndims)):
+    for i in reversed(xrange(self.ndims)):
       w = 1
-      for j in range(i):
+      for j in xrange(i):
         w *= self.num_cells[j]
       q = np.floor(id / w)
       node[i] = q

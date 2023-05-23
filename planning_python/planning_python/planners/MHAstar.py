@@ -3,6 +3,7 @@ import os
 import sys
 import numpy as np
 from threading import Thread
+from sets import Set
 import time
 sys.path.insert(0, os.path.abspath('..'))
 from planning_python.data_structures import PriorityQueue
@@ -52,12 +53,12 @@ class MHAstar(Planner):
     while (not frontier1.empty()) or (not frontier2.empty()) or (not frontier3.empty()) :
       #Check 1: Stop search if frontier gts too large
       if curr_expansions >= max_expansions:
-        print ("Max Expansions Done")
+        print "Max Expansions Done"
         # self.planning_done = True
         break
       #Check 2: Stop search if open list gets too large
       if frontier1.size() > 500000 or frontier2.size() > 500000 or frontier3.size() > 50000:
-        print ("Timeout.")
+        print "Timeout."
         break
       idx = curr_expansions%len(frontiers)
 
@@ -75,7 +76,7 @@ class MHAstar(Planner):
 
       #Check 3: Stop search if goal found
       if self.problem.g.states_close(current_id, goal_id):
-        print ("Found goal")
+        print "Found goal"
         found_goal = True
         break
       
@@ -87,7 +88,7 @@ class MHAstar(Planner):
       for (next_id, i) in zip(neighbor_ids, movements):
         if next_id not in came_from:
           new_cost = cost + self.problem.g.cost(current_id, next_id, i)
-          for i in range(len(frontiers)):
+          for i in xrange(len(frontiers)):
             if i == 2: heuristic_val = self.heuristic_functions[i](self.problem.g.node_id_to_configuration(next_id), c_obs)
             else: heuristic_val = self.heuristic_functions[i](self.problem.g.node_id_to_configuration(next_id), goal) 
             total_cost = heuristic_val
@@ -108,8 +109,8 @@ class MHAstar(Planner):
         time.sleep(1)
         self.visualizer.close()
     
-    print ("Time taken: ", time.time() - start_time)
-    print ("Number of Expansions: ", curr_expansions)
-    print ("Number of Rexpansions: ", num_rexpansions)
+    print "Time taken: ", time.time() - start_time
+    print "Number of Expansions: ", curr_expansions
+    print "Number of Rexpansions: ", num_rexpansions
     return path, motions, path_cost, cost_so_far, came_from, curr_expansions
   
