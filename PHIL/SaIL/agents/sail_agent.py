@@ -23,9 +23,9 @@ from SaIL.oracle import Oracle
 class SaILAgent():
   def __init__(self, sail_params, env_params, learner_params, lattice, cost_fn, start, goal):
     self.beta0 = sail_params['beta0'] #Initial beta (after iter 0)
-    self.k     = sail_params['k']     #Number of datapoitns to collect per environment
+    self.k     = sail_params['k']     #Number of datapoitns to collect per environment - T_tau
     self.N     = sail_params['N']     #number of SaIL iterations
-    self.T     = sail_params['T']     #episode length for training
+    self.T     = sail_params['T']     #episode length for training (roll-out)
     self.Tv    = sail_params['Tv']    #sail_params['Tv']    #episode length for validation/testing
     self.maps_num = sail_params['m']     #Number of training envs
     self.maps_val_num = sail_params['mv']    #Number of validation envs
@@ -48,8 +48,7 @@ class SaILAgent():
     self.start_n = self.lattice.state_to_node(self.start)
     self.goal_n = self.lattice.state_to_node(self.goal)
 
-  def run_training(self, train_folder, train_oracle_folder, validation_folder, validation_oracle_folder, model_folder, file_start_num_train, file_start_num_valid,
-                                                                                                        pretrained_model, visualize_train, visualize_validation, oracle_file_type="json"):
+  def run_training(self, train_folder, train_oracle_folder, validation_folder, validation_oracle_folder, model_folder, file_start_num_train, file_start_num_valid, pretrained_model, visualize_train, visualize_validation, oracle_file_type="json"):
     #Runs the SaIL training loop for N
     
     results = dict()
@@ -88,11 +87,9 @@ class SaILAgent():
           path, path_cost, curr_expansions, plan_time, _, _, _, dataset = self.train_planner.plan(self.oracle, curr_beta, self.k, self.T)
           agg_dataset += dataset #add data to meta dataset
 
-          print(dataset)
-          exit(0)
         except ValueError as e:
           print(e)
-          exit(1)
+          continue
         self.train_planner.clear_planner()
         self.e.clear()
         self.oracle.clear()

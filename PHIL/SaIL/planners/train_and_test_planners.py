@@ -26,10 +26,12 @@ class TrainPlanner(SaILPlanner):
     path_cost = np.inf
     dataset = []
     #Uniformly sample timesteps to collect data    
-    if beta == 1:
-      oracle_max = oracle.get_optimal_q(self.start_node)
-      data_steps = np.random.choice(int(oracle_max), num_datapoints)#, replace=False)
-    else: data_steps = np.random.choice(max_expansions, num_datapoints)#, replace=False)
+    # if beta == 1:
+    #   oracle_max = oracle.get_optimal_q(self.start_node)
+    #   data_steps = np.random.choice(int(oracle_max), num_datapoints)#, replace=False)
+    # else: data_steps = np.random.choice(max_expansions, num_datapoints)#, replace=False)
+
+    data_steps = np.random.randint(0, max_expansions-num_datapoints)#, replace=False)
     
     self.came_from[self.start_node]= (None, None)
     self.cost_so_far[self.start_node] = 0.
@@ -48,13 +50,13 @@ class TrainPlanner(SaILPlanner):
         print("Timeout.")
         break
       #Step 1: Collect data if curr expansions is in sampled timesteps
-      if curr_expansions in data_steps:
+      if curr_expansions > data_steps:
         #we choose a random feasible action
-        rand_idx = np.random.randint(self.frontier.size())
+        last_idx = self.frontier.size() - 1
         #collect features, label for action
-        rand_f, y = self.collect_data(rand_idx, oracle)
+        last_f, y = self.collect_data(last_idx, oracle)
         #append to dataset
-        dataset.append((rand_f, y))
+        dataset.append((last_f, y))
       #Step 2: Pop the best node (according to the mixture policy)
       h, curr_node = self.policy_mix(beta)
 

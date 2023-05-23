@@ -109,13 +109,11 @@ class SaILPlanner(SearchBasedPlanner):
   def get_heuristic(self, node1, node2):
     """Requires a heuristic function that goes works off of feature"""
     if self.heuristic == None:
-      raise NotImplementedError
-      return 0, 0 #TODO zero Z vector, not zero
+      return 0
     ftrs = self.get_features(node1)
     # s_2 = self.lattice.node_to_state(node2)
-    raise NotImplementedError
-    h_val, z_val = self.heuristic.get_heuristic(ftrs)
-    return h_val, z_val
+    h_val = self.heuristic.get_heuristic(ftrs)
+    return h_val
 
   def clear_planner(self):
     self.frontier.clear()
