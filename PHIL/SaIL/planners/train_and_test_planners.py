@@ -16,15 +16,15 @@ class TrainPlanner(SaILPlanner):
     
     super(TrainPlanner, self).__init__()
 
-  def plan(self, oracle, beta=1, num_datapoints=0, max_expansions = 100000):
+  def plan(self, oracle, beta=1, num_datapoints=0, max_expansions = 1000):
     assert self.initialized == True, "Planner has not been initialized properly. Please call initialize or reset_problem function before plan function"
     start_t = time.time()
     curr_expansions = 0         #Number of expansions done
     num_rexpansions = 0
+    n_steps = 0
     found_goal = False
     path =[]
     path_cost = np.inf
-    dataset = []
     #Uniformly sample timesteps to collect data    
     # if beta == 1:
     #   oracle_max = oracle.get_optimal_q(self.start_node)
@@ -32,15 +32,16 @@ class TrainPlanner(SaILPlanner):
     # else: data_steps = np.random.choice(max_expansions, num_datapoints)#, replace=False)
 
     data_steps = np.random.randint(0, max_expansions-num_datapoints)#, replace=False)
-    
     self.came_from[self.start_node]= (None, None)
     self.cost_so_far[self.start_node] = 0.
     self.depth_so_far[self.start_node] = 0
     start_h_val = self.get_heuristic(self.start_node, self.goal_node)
     self.frontier.put(self.start_node, start_h_val)
     self.f_o.put(self.start_node, oracle.get_optimal_q(self.start_node))
+    dataset = []
 
     while not self.frontier.empty():
+
       #Check 1: Stop search if frontier gets too large
       if curr_expansions >= max_expansions:
         print("Max Expansions Done.")
@@ -60,9 +61,8 @@ class TrainPlanner(SaILPlanner):
       #Step 2: Pop the best node (according to the mixture policy)
       h, curr_node = self.policy_mix(beta)
 
-      if curr_node in self.visited:
-        continue
-
+      # if curr_node in self.visited:
+      #   continue
       #Step 3: Add to visited and increment expansions
       self.visited[curr_node] = 1
       curr_expansions += 1
@@ -123,7 +123,7 @@ class TestPlanner(SaILPlanner):
     start_h_val = self.get_heuristic(self.start_node, self.goal_node)
     self.frontier.put(self.start_node, start_h_val)
 
-    curr_expansions = 0         #Number of expansions done
+    curr_expansions = 1         #Number of expansions done
     num_rexpansions = 0
     avg_loss = math.pow(start_h_val-oracle.get_optimal_q(self.start_node), 2)
     found_goal = False

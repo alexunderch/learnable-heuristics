@@ -24,6 +24,18 @@ class EuclideanHeuristicNoAng(HeuristicFunction):
     return np.linalg.norm(goal-state)
 
 
+class CosineHeuristicNoAng(HeuristicFunction):
+  """Computes cosine distance between two states.
+
+  Useful when states do not contain angular terms
+  """
+  def __init__(self):
+    super(CosineHeuristicNoAng, self).__init__()
+
+  def get_heuristic(self, state, goal):
+    return np.dot(state, goal)/(np.linalg.norm(state)*np.linalg.norm(goal) + 1e-7)
+
+
 class ManhattanHeuristicNoAng(HeuristicFunction):
   """Computes manhattan distance between two states.
 
@@ -58,6 +70,20 @@ class EuclideanHeuristicAng(HeuristicFunction):
 
   def get_heuristic(self, state, goal):
     return np.linalg.norm(goal[:-1]-state[:-1])
+
+
+class CosineHeuristicAng(HeuristicFunction):
+  """Computes cosine distance between two states.
+
+  Useful when states contain angular terms
+  """
+  def __init__(self):
+    super(CosineHeuristicAng, self).__init__()
+
+  def get_heuristic(self, state, goal):
+    goal, state = goal[:-1], state[:-1]
+    return np.dot(state, goal)/(np.linalg.norm(state)*np.linalg.norm(goal) + 1e-7)
+
 
 
 class ManhattanHeuristicAng(HeuristicFunction):

@@ -7,7 +7,7 @@ from collections import defaultdict
 from planning_python.heuristic_functions.heuristic_function import EuclideanHeuristicNoAng, ManhattanHeuristicNoAng, DubinsHeuristic
 import numpy as np
 import random
-
+import os
 
 class SupervisedRegressionNetwork():
   def __init__(self                       ,\

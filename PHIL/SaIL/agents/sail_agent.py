@@ -69,27 +69,22 @@ class SaILAgent():
       print('Found pretrained model')
       self.heuristic_fn.load_params(pretrained_model)
     for i in range(self.N):
-      #! curr_beta = (self.beta0)**i #curr_beta = 1 for 0th iteration (expert only), then decayed exponentially based on beta0
-      curr_beta = 0
+      curr_beta = (self.beta0)**i #curr_beta = 1 for 0th iteration (expert only), then decayed exponentially based on beta0
       iter_expansions = 0
     
 
       for j in range(self.maps_num):
         curr_env_file = os.path.join(os.path.abspath(train_folder), str(file_start_num_train + j) + '.png')
         curr_oracle_file = os.path.join(os.path.abspath(train_oracle_folder), "oracle_" + str(file_start_num_train + j)+'.' + oracle_file_type)
-        print(curr_oracle_file)
         self.e.initialize(curr_env_file, self.env_params)
         # self.e.calculate_distance_transform()
         self.oracle.initialize(curr_oracle_file) 
         self.prob.initialize(self.e, self.lattice, self.cost_fn, self.heuristic_fn, self.start_n, self.goal_n, visualize= visualize_train) 
         self.train_planner.initialize(self.prob) #! planner
-        try:
-          path, path_cost, curr_expansions, plan_time, _, _, _, dataset = self.train_planner.plan(self.oracle, curr_beta, self.k, self.T)
-          agg_dataset += dataset #add data to meta dataset
+        path, path_cost, curr_expansions, plan_time, _, _, _, _ = self.train_planner.plan(self.oracle, 1, 0, self.T)
+        _, _, _, _, _, _, _, dataset = self.train_planner.plan(self.oracle, curr_beta, self.k, self.T)
 
-        except ValueError as e:
-          print(e)
-          continue
+        agg_dataset += dataset #add data to meta dataset
         self.train_planner.clear_planner()
         self.e.clear()
         self.oracle.clear()

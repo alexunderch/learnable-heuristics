@@ -8,9 +8,14 @@ from collections import defaultdict
 from math import atan2, pi
 import numpy as np
 import time
+import random
 from planning_python.data_structures.priority_queue import PriorityQueue
 from planning_python.planners.search_based_planner import SearchBasedPlanner
-from planning_python.heuristic_functions.heuristic_function import EuclideanHeuristicNoAng, ManhattanHeuristicNoAng, DubinsHeuristic
+from planning_python.heuristic_functions.heuristic_function import EuclideanHeuristicNoAng, ManhattanHeuristicNoAng, DubinsHeuristic, CosineHeuristicNoAng
+
+from torch import Tensor
+from torch_geometric.data import Data
+random.seed(1111)
 
 class SaILPlanner(SearchBasedPlanner):
   def __init__(self):
@@ -32,13 +37,13 @@ class SaILPlanner(SearchBasedPlanner):
     super(SaILPlanner, self).initialize(problem)
     
     self.euch = EuclideanHeuristicNoAng()
-    self.manh = ManhattanHeuristicNoAng()
+    self.cos = CosineHeuristicNoAng()
     if self.lattice.ndims == 3: self.dubh = DubinsHeuristic(self.lattice.radius)  
     self.norm_terms = dict()
     min_st = np.array((self.lattice.x_lims[0], self.lattice.y_lims[0]))
     max_st = np.array((self.lattice.x_lims[1], self.lattice.y_lims[1]))
     self.norm_terms['euc'] = self.euch.get_heuristic(min_st, max_st)
-    self.norm_terms['manhattan'] = self.manh.get_heuristic(min_st, max_st)
+    self.norm_terms['cosine'] = self.cos.get_heuristic(min_st, max_st)
     print('Planner Initialized')
 
   def get_features(self, node):
@@ -47,20 +52,21 @@ class SaILPlanner(SearchBasedPlanner):
     s = self.lattice.node_to_state(node)
     goal_s = self.lattice.node_to_state(self.goal_node)
     start_s = self.lattice.node_to_state(self.start_node) 
+
     #calculate search based features
     features = list(s)
-    features.append(self.cost_so_far[node])
+    # features.append(self.cost_so_far[node])
     # features.append(self.euch.get_heuristic(s, start_s)/self.norm_terms['euc'])       #normalized euclidean distance to start
     features.append(self.euch.get_heuristic(s, goal_s))#/self.norm_terms['euc'] )       #normalized euclidean distance to goal
     # features.append(self.manh.get_heuristic(s, start_s)/self.norm_terms['manhattan']) #normalized manhattan distance to start
-    features.append(self.manh.get_heuristic(s, goal_s))#/self.norm_terms['manhattan'])  #normalized manhattan distance to goal
+    features.append(self.cos.get_heuristic(s, goal_s))#/self.norm_terms['manhattan'])  #normalized manhattan distance to goal
   
     if self.lattice.ndims == 3:
       features.append(self.dubh.get_heuristic(s, start_s)) #normalized dubins distance to start
       features.append(self.dubh.get_heuristic(s, goal_s)) #normalized dubins distance to goal
       features.append(s[-1])                #heading of the state
 
-    features.append(self.depth_so_far[node])
+    # features.append(self.depth_so_far[node])
     features += list(goal_s)
 
     #calculate environment based features 
@@ -110,26 +116,47 @@ class SaILPlanner(SearchBasedPlanner):
     """Requires a heuristic function that goes works off of feature"""
     if self.heuristic == None:
       return 0
-    ftrs = self.get_features(node1)
-    # s_2 = self.lattice.node_to_state(node2)
-    h_val = self.heuristic.get_heuristic(ftrs)
+    h_val = self.heuristic.get_heuristic(self.convert_to_torch(node1))
     return h_val
 
   def clear_planner(self):
     self.frontier.clear()
     self.f_o.clear()
-    self.visited.clear()
     self.c_obs.clear()
     self.cost_so_far.clear()
     self.came_from.clear()
+
+  def convert_to_torch(self, node, neighborhood_size=5):
+    neighbors, _, valid_edges, _ = self.get_predecessors(node)
+    sneighbors, _, svalid_edges, _ = self.get_successors(node)
+    valid_edges = svalid_edges + valid_edges
+    X, A = [self.get_features(node)], []
+
+    for n_ind, neighbor in enumerate(random.sample(neighbors+sneighbors, neighborhood_size), start=1):
+      X.append(self.get_features(neighbor))
+      if [node, neighbor]  in valid_edges or [neighbor, node] in valid_edges:
+        A.append([0, n_ind])
+        A.append([n_ind, 0])
+    #QUESTIONABLE
+    # for n_ind, ni in enumerate(neighbors, start=1):
+    #   for n_jnd, nj in enumerate(neighbors[n_ind+1:]):
+    #     if self.env.is_edge_valid((ni, nj)):
+    #       A.append([n_jnd, n_ind])
+    #     if self.env.is_edge_valid((nj, ni)):
+    #       A.append([n_jnd, n_ind])
+    
+    goal_f = list(self.lattice.node_to_state(self.goal_node))
+
+    return Data(x = Tensor(X), 
+                edge_index=Tensor(A).t().contiguous(),
+                y=Tensor(goal_f)[None])
   
-  def collect_data(self, rand_idx, oracle):
-    _, _, rand_node = self.frontier.get_idx(rand_idx) 
-    #we get features for that action
-    rand_f = self.get_features(rand_node)
+
+  def collect_data(self, idx, oracle):
+    _, _, node = self.frontier.get_idx(idx)     
     #we query oracle for label
-    y = oracle.get_optimal_q(rand_node)
-    return rand_f, y
+    y = oracle.get_optimal_q(node)
+    return self.convert_to_torch(node), y
 
   def policy(self):
     h, _, curr_node = self.frontier.get()
@@ -137,7 +164,7 @@ class SaILPlanner(SearchBasedPlanner):
   
   def policy_mix(self, beta):
     """Implements the mixture policy"""
-    if np.random.sample(1) < beta:
+    if np.random.sample(1) <= beta:
       h, _ , curr_node = self.f_o.get()
       _, _, _ = self.frontier.pop_task(curr_node)
     else:
@@ -145,6 +172,5 @@ class SaILPlanner(SearchBasedPlanner):
       _, _, _ = self.f_o.pop_task(curr_node)
     
     return h, curr_node   
-
 
 
